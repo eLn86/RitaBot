@@ -8,7 +8,6 @@ const discord = require("discord.js");
 const embed = new discord.MessageEmbed();
 const logger = require("./logger");
 const error = require("./error");
-const db = require("./db");
 const auth = require("./auth");
 
 // ---------------------
@@ -19,44 +18,8 @@ async function sendMessage (data)
 {
 
    const owner = await data.message.guild.members.fetch(data.message.guild.ownerID);
-   return data.message.channel.send(embed).then((msg) =>
-   {
-
-      db.getServerInfo(
-         data.message.guild.id,
-         function getServerInfo (server)
-         {
-
-            if (server[0].menupersist === false || server[0].menupersist === 0)
-            {
-
-               try
-               {
-
-                  setTimeout(() => msg.delete(), auth.time.long);
-
-               }
-               catch (err)
-               {
-
-                  console.log(
-                     "Bot Message Deleted Error 1, command.send.js",
-                     err
-                  );
-
-               }
-
-            }
-
-         }
-      ).catch((err) => console.log(
-         "error",
-         err,
-         "warning",
-         data.message.guild.id
-      ));
-
-   }).
+   const tag = `${owner.user.username}#${owner.user.discriminator}`;
+   return data.message.channel.send(embed).
       // eslint-disable-next-line consistent-return
       catch((err) =>
       {
@@ -64,17 +27,12 @@ async function sendMessage (data)
          if (err.code && err.code === error.perm || err.code === error.access)
          {
 
-            const col = "errorcount";
-            const id = data.message.guild.id || data.message.sourceID;
-            const tag = `${owner.user.username}#${owner.user.discriminator}`;
-            db.increaseServersCount(col, id);
-
             // console.log("Error 50013");
             logger(
                "custom",
                {
                   "color": "ok",
-                  "msg": `:exclamation: Write Permission Error - CS.js\n
+                  "msg": `:exclamation: Write Permission Error - DS.js\n
                   Server: **${data.channel.guild.name || "Unknown"}** \n
                   Channel: **${data.channel.name || "Unknown"}**\n
                   Chan ID: **${data.channel.id || "Unknown"}**\n
@@ -98,7 +56,7 @@ async function sendMessage (data)
                return console.log(writeErr);
 
             }
-            // console.log("DEBUG: Line 101 - Command.Send.js");
+            // console.log("DEBUG: Line 59 - Dev.Send.js");
             return owner.
                send(writeErr).
                catch((err) => console.log(
@@ -140,7 +98,7 @@ module.exports = function run (data)
       {
 
          console.log(
-            "Bot Message Deleted Error 2, command.send.js",
+            "Bot Message Deleted Error 1, dev.send.js",
             err
          );
 
@@ -148,8 +106,7 @@ module.exports = function run (data)
       embed.
          setColor(colors.get(data.color)).
          setDescription(`Developer Identity confirmed:\n\n${data.text}`).
-         setTimestamp().
-         setFooter("This message may self-destruct in one minute");
+         setTimestamp();
       // -------------
       // Send message
       // -------------
@@ -157,7 +114,7 @@ module.exports = function run (data)
       return sendMessage(data);
 
    }
-   // console.log("DEBUG: Sufficient Permission");
+   // console.log("DEBUG: Insufficient Permission");
    try
    {
 
@@ -168,16 +125,17 @@ module.exports = function run (data)
    {
 
       console.log(
-         "Bot Message Deleted Error 3, command.send.js",
+         "Bot Message Deleted Error 2 dev.send.js",
          err
       );
 
    }
+   data.text = ":cop:  This Command is for bot developers only.";
    embed.
       setColor(colors.get(data.color)).
       setDescription(data.text).
       setTimestamp().
-      setFooter("This message may self-destruct in one minute");
+      setFooter("This message will self-destruct in one minute");
 
    // -------------
    // Send message

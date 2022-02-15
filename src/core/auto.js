@@ -13,7 +13,7 @@ const fn = require("./helpers");
 // Proccess task
 // --------------
 
-const sendTranslation = function sendTranslation (data)
+function sendTranslation (data)
 {
 
    if (data.proccess)
@@ -41,13 +41,13 @@ const sendTranslation = function sendTranslation (data)
 
    }
 
-};
+}
 
 // ------------------
 // Start translation
 // ------------------
 
-const startTranslation = function startTranslation (data, i, row)
+function startTranslation (data, i, row)
 {
 
    const replyID = row.reply;
@@ -93,7 +93,7 @@ const startTranslation = function startTranslation (data, i, row)
       const userID = row.dest.slice(1);
 
       fn.getUser(
-         data.client,
+         data.message.client,
          userID,
          (user) =>
          {
@@ -135,12 +135,12 @@ const startTranslation = function startTranslation (data, i, row)
 
    }
 
-};
+}
 // ---------------------
 // Analyze rows in loop
 // ---------------------
 
-const analyzeRows = function analyzeRows (data, i)
+function analyzeRows (data, i)
 {
 
    const row = data.rows[i];
@@ -149,36 +149,31 @@ const analyzeRows = function analyzeRows (data, i)
    // Set forward channel for sender
    // -------------------------------
 
-   if (row.dest !== data.message.channel.id)
+   data.forward = row.dest;
+   data.embeds = data.message.embeds;
+   data.attachments = data.message.attachments;
+
+   if (data.message.channel.type === "dm")
    {
 
-      data.forward = row.dest;
-      data.embeds = data.message.embeds;
-      data.attachments = data.message.attachments;
+      const replyIndex = data.message.content.indexOf(":");
+      const reply = data.message.content.slice(
+         0,
+         replyIndex
+      );
+      const replyCon = data.message.content.slice(replyIndex + 1);
 
-      if (data.message.channel.type === "dm")
+      if (reply === row.reply)
       {
 
-         const replyIndex = data.message.content.indexOf(":");
-         const reply = data.message.content.slice(
-            0,
-            replyIndex
-         );
-         const replyCon = data.message.content.slice(replyIndex + 1);
+         data.proccess = true;
+         data.message.content = replyCon;
 
-         if (reply === row.reply)
-         {
+      }
+      else
+      {
 
-            data.proccess = true;
-            data.message.content = replyCon;
-
-         }
-         else
-         {
-
-            data.proccess = false;
-
-         }
+         data.proccess = false;
 
       }
 
@@ -204,7 +199,7 @@ const analyzeRows = function analyzeRows (data, i)
       row
    );
 
-};
+}
 
 // -----------------
 // Get data from db
@@ -235,7 +230,7 @@ module.exports = function run (data)
       if (data.message.content === undefined || data.message.content === " ")
       {
 
-         console.log(`--a.js--- Empty Message Error: ----1----\nServer: ${data.message.channel.guild.name},\nChannel: ${data.message.channel.id} - ${data.message.channel.name},\nMessage ID: ${data.message.id},\nContent: ${data.message.content},\nWas Image: ${data.message.attachments},\nwas Embed: ${data.message.embeds},\nSender: ${data.message.member.displayName} - ${data.message.member.id},\nTimestamp: ${data.message.createdAt}\n----------------------------------------`);
+         console.log(`--a.js--- Empty Message Error: ----1----\nServer: ${data.message.channel.guild.name},\nChannel: ${data.message.channel.id} - ${data.message.channel.name},\nMessage ID: ${data.message.id},\nContent: ${data.message.content},\nWas Image: ${data.message.attachments},\nWas Embed: ${data.message.embeds},\nSender: ${data.message.member.displayName} - ${data.message.member.id},\nTimestamp: ${data.message.createdAt}\n----------------------------------------`);
          data.message.content = `Error: 10001 - Auto Error, Please report to admins.`;
 
       }

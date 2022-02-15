@@ -8,17 +8,29 @@ const sendMessage = require("../../core/command.send");
 // -------------
 // Command Code
 // -------------
-const channelName = function channelName (data)
+function channelName (data)
 {
 
    // Arguments to set the channel name
    const channelName = data.cmd.params.split(" ")[0].toLowerCase();
 
-   data.message.guild.channels.create(channelName, {
-      // This create a text channel, you can make a voice one too, by changing "text" to "voice"
+   data.message.guild.channels.create(channelName).
+      then((channel) =>
+      {
 
-      "type": "text"
-   });
+         const category = data.message.guild.channels.cache.find((c) => c.type === "category");
+
+         const catID = data.cmd.num;
+         if (!category)
+         {
+
+            throw new Error("Category channel does not exist");
+
+         }
+         channel.setParent(catID);
+
+      }).
+      catch(console.error);
 
    data.color = "ok";
    data.text =
@@ -31,7 +43,7 @@ const channelName = function channelName (data)
 
    return sendMessage(data);
 
-};
+}
 
 module.exports = function run (data)
 {
@@ -40,20 +52,14 @@ module.exports = function run (data)
    // Command allowed by admins only
    // -------------------------------
 
-   Override: if (!process.env.DISCORD_BOT_OWNER_ID.includes(data.message.author.id))
+   Override: if (!data.message.isDev)
    {
 
-      if (data.message.isManager === false)
+      if (!data.message.isGlobalChanManager)
       {
 
-         {
-
-            data.color = "warn";
-
-         }
-         data.text =
-         ":police_officer:  You need to be a channel manager to " +
-         "create a new channel";
+         data.color = "warn";
+         data.text = ":police_officer:  You need to be a server channel manager to create a new channel";
 
          // -------------
          // Send message
